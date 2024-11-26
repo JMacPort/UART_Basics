@@ -1,20 +1,22 @@
 #include "main.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 // Prototypes
 void UART_Init();
 char UART_Get_Char();
-void UART_Read_String(char*, int);
+bool UART_Read_String(char*, int);
 
 
 int main() {
     UART_Init();
-    char buffer[50];
+    char buffer[5];
 
     while(1) {
-       UART_Read_String(buffer, sizeof(buffer));              		// Read data
-       printf("You typed: %s\r\n\n", buffer);
+       if (UART_Read_String(buffer, sizeof(buffer))) {              		// Read data
+    	   printf("You typed: %s\r\n\n", buffer);
+       }
     }
 }
 
@@ -53,16 +55,26 @@ char UART_Get_Char() {
 	return USART2 -> DR;
 }
 
-void UART_Read_String(char* string, int length) {
-	int i = 0;
-	char c;
+bool UART_Read_String(char* string, int length) {
+    int i = 0;
+    char c;
 
-	while (i < length - 1) {
-		c = UART_Get_Char();
-		if (c == '\r' || c == '\n') {
-			break;
-		}
-		string[i++] = c;
-	}
-	string[i] = '\0';
+    while (1) {
+        c = UART_Get_Char();
+
+        if (c == '\r' || c == '\n') {
+            break;
+        }
+
+        if (i >= length - 1) {
+            printf("Error! Too many characters\r\n\n");
+            string[0] = '\0';
+            return false;
+        }
+
+        string[i++] = c;
+    }
+
+    string[i] = '\0';
+    return true;
 }
