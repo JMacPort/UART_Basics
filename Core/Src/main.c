@@ -1,18 +1,20 @@
 #include "main.h"
 #include <stdio.h>
+#include <string.h>
 
 // Prototypes
 void UART_Init();
+char UART_Get_Char();
+void UART_Read_String(char*, int);
+
 
 int main() {
     UART_Init();
+    char buffer[50];
 
     while(1) {
-    	while(!(USART2 -> SR & (1 << 5)));
-        char c = USART2 -> DR;              		// Read data
-
-        printf("Got: %c\r\n", c);         		// Echo it back
-        USART2 -> SR &= ~(1 << 6);
+       UART_Read_String(buffer, sizeof(buffer));              		// Read data
+       printf("You typed: %s\r\n\n", buffer);
     }
 }
 
@@ -46,7 +48,21 @@ int __io_putchar(int c) {
     return c;
 }
 
-//int __io_getchar() {
-//	while(!(USART2 -> SR & (1 << 5)));
-//	return USART2 -> DR;
-//}
+char UART_Get_Char() {
+	while(!(USART2 -> SR & (1 << 5)));
+	return USART2 -> DR;
+}
+
+void UART_Read_String(char* string, int length) {
+	int i = 0;
+	char c;
+
+	while (i < length - 1) {
+		c = UART_Get_Char();
+		if (c == '\r' || c == '\n') {
+			break;
+		}
+		string[i++] = c;
+	}
+	string[i] = '\0';
+}
